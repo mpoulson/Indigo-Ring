@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<PluginConfig>
+	<Field id="infoLabel" type="label">
+		<Label>Ring Doorbell Plugin</Label>
+	</Field>
+	<Field type="textfield" id="UserID" tooltip="Ring Username" visibleBindingValue="true">
+		<Label>Ring Username:</Label>
+	</Field>
+	<Field type="textfield" id="Password" secure="true" tooltip="Ring Password" visibleBindingValue="true">
+		<Label>Ring Password:</Label>
+	</Field>
+	 <Field id="sep1" type="separator"/>
+    <Field id="updateFrequency" type="textfield" defaultValue="24">
+        <Label>Check for plugin update frequency (hours):</Label>
+    </Field>
+    <Field id="updateNote" type="label" fontSize="small" fontColor="darkgray">
+        <Label>The plugin will not check for updates if the frequency is set to zero.</Label>
+    </Field>
+	<Field id="simpleSeparator4" type="separator"/>
+	<Field type="checkbox" id="showDebugInLog"
+		tooltip="This enables lots of debugging messages in the Indigo Event Log.">
+		<Label>Enable debugging:</Label>
+		<Description>(use carefully)</Description>
+	</Field>
+</PluginConfig>

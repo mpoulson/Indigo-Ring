@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<Devices>
+	<Device type="custom" id="RingDoorbell">
+		<Name>Ring Doorbell</Name>
+		<ConfigUI>
+			<Field id="address" type="textfield"  hidden="true" >
+				<Label/>
+			</Field>
+			<Field id="doorbell" type="menu">
+				<Label>Ring Doorbell:</Label>
+				<List class="self" filter="" method="doorbellList"/>
+				<CallbackMethod>selectionChanged</CallbackMethod>
+			</Field>
+			<Field type="textfield" id="doorbellId" readonly="true">
+				<Label>Device ID:</Label>
+			</Field>
+			<Field type="textfield" id="name" readonly="true">
+				<Label>System Name:</Label>
+			</Field>
+			<Field type="textfield" id="kind" readonly="true">
+				<Label>System Type:</Label>
+			</Field>
+			<Field type="textfield" id="firmware" readonly="true">
+				<Label>Firmware Version:</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="name">
+				<ValueType>String</ValueType>
+				<TriggerLabel>name</TriggerLabel>
+				<ControlPageLabel>name</ControlPageLabel>
+			</State>
+			<State id="lastEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastEvent</TriggerLabel>
+				<ControlPageLabel>lastEvent</ControlPageLabel>
+			</State>
+			<State id="lastEventTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastEventTime</TriggerLabel>
+				<ControlPageLabel>lastEventTime</ControlPageLabel>
+			</State>
+			<State id="lastAnswered">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>lastAnswered</TriggerLabel>
+				<ControlPageLabel>lastAnswered</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+</Devices>
