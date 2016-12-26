@@ -45,6 +45,16 @@
 				<TriggerLabel>lastAnswered</TriggerLabel>
 				<ControlPageLabel>lastAnswered</ControlPageLabel>
 			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>model</TriggerLabel>
+				<ControlPageLabel>model</ControlPageLabel>
+			</State>
+			<State id="firmware">
+				<ValueType>String</ValueType>
+				<TriggerLabel>firmware</TriggerLabel>
+				<ControlPageLabel>firmware</ControlPageLabel>
+			</State>
 		</States>
 	</Device>
 </Devices>

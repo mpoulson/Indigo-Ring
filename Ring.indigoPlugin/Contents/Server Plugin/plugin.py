@@ -31,7 +31,7 @@ class Plugin(indigo.PluginBase):
 		self.deviceList = {}
 		self.loginFailed = False
 
-	def _refreshStatesFromHardware(self, dev, logRefresh, commJustStarted):
+	def _refreshStatesFromHardware(self, dev):
 
 		doorbellId = dev.pluginProps["doorbellId"]
 		self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
@@ -48,6 +48,10 @@ class Plugin(indigo.PluginBase):
 		except: self.de (dev, "lastEventTime")
 		try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
 		except: self.de (dev, "lastAnswered")
+		try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
+		except: self.de (dev, "firmware")
+		try: self.updateStateOnServer(dev, "model", doorbell.kind)
+		except: self.de (dev, "model")
 		
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
@@ -95,12 +99,9 @@ class Plugin(indigo.PluginBase):
 						if not dev.enabled:
 							continue
 
-						# Plugins that need to poll out the status from the thermostat
-						# could do so here, then broadcast back the new values to the
-						# Indigo Server.
-						self._refreshStatesFromHardware(dev, False, False)
+						self._refreshStatesFromHardware(dev)
 
-				self.sleep(20)
+				self.sleep(5)
 		except self.StopThread:
 			pass	# Optionally catch the StopThread exception and do any needed cleanup.
 
@@ -125,11 +126,6 @@ class Plugin(indigo.PluginBase):
 		if self.loginFailed == True:
 			return
 
-		# Called when communication with the hardware should be established.
-		# Here would be a good place to poll out the current states from the
-		# thermostat. If periodic polling of the thermostat is needed (that
-		# is, it doesn't broadcast changes back to the plugin somehow), then
-		# consider adding that to runConcurrentThread() above.
 		self.initDevice(dev)
 
 		dev.stateListOrDisplayStateIdChanged()
@@ -165,9 +161,6 @@ class Plugin(indigo.PluginBase):
 
 	def initDevice(self, dev):
 		self.debugLog("Initializing Ring device: %s" % dev.name)
-		self.updateStateOnServer (dev, "lastEvent", "")
-		self.updateStateOnServer (dev, "lastEventTime", "")
-		self.updateStateOnServer (dev, "lastAnswered", "")
 	
 	def buildAvailableDeviceList(self):
 		self.debugLog("Building Available Device List")
