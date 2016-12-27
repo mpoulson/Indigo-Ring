@@ -7,9 +7,9 @@ import os
 import sys
 import random
 import re
-import urllib2
-import urllib
 import time
+from datetime import datetime,tzinfo,timedelta
+
 from Ring import Ring
 from copy import deepcopy
 from ghpu import GitHubPluginUpdater
@@ -34,24 +34,33 @@ class Plugin(indigo.PluginBase):
 	def _refreshStatesFromHardware(self, dev):
 
 		doorbellId = dev.pluginProps["doorbellId"]
-		self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
+		#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
 
 		doorbell = Ring.GetDevice(self.Ring,doorbellId)
+		lastEvents = Ring.GetDoorbellEvent(self.Ring)
 
-		event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
-	
-		try: self.updateStateOnServer(dev, "name", doorbell.description)
-		except: self.de (dev, "name")
-		try: self.updateStateOnServer(dev, "lastEvent", event.kind)
-		except: self.de (dev, "lastEvent")
-		try: self.updateStateOnServer(dev, "lastEventTime", str(event.now))
-		except: self.de (dev, "lastEventTime")
-		try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
-		except: self.de (dev, "lastAnswered")
-		try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
-		except: self.de (dev, "firmware")
-		try: self.updateStateOnServer(dev, "model", doorbell.kind)
-		except: self.de (dev, "model")
+		if len(lastEvents) == 0:
+			event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
+		else:
+			self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
+			for k,v in lastEvents.iteritems():
+				event = v
+				break
+
+		if datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now:
+
+			try: self.updateStateOnServer(dev, "name", doorbell.description)
+			except: self.de (dev, "name")
+			try: self.updateStateOnServer(dev, "lastEvent", event.kind)
+			except: self.de (dev, "lastEvent")
+			try: self.updateStateOnServer(dev, "lastEventTime", str(event.now))
+			except: self.de (dev, "lastEventTime")
+			try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
+			except: self.de (dev, "lastAnswered")
+			try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
+			except: self.de (dev, "firmware")
+			try: self.updateStateOnServer(dev, "model", doorbell.kind)
+			except: self.de (dev, "model")
 		
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
@@ -99,9 +108,10 @@ class Plugin(indigo.PluginBase):
 						if not dev.enabled:
 							continue
 
-						self._refreshStatesFromHardware(dev)
 
-				self.sleep(5)
+					self._refreshStatesFromHardware(dev)
+
+				self.sleep(3)
 		except self.StopThread:
 			pass	# Optionally catch the StopThread exception and do any needed cleanup.
 
@@ -161,6 +171,8 @@ class Plugin(indigo.PluginBase):
 
 	def initDevice(self, dev):
 		self.debugLog("Initializing Ring device: %s" % dev.name)
+		#if (dev.states["lastEventTime"] == "")
+		dev.states["lastEventTime"]  =  str(datetime.strptime('2016-01-01 01:00:00','%Y-%m-%d %H:%M:%S'))
 	
 	def buildAvailableDeviceList(self):
 		self.debugLog("Building Available Device List")
