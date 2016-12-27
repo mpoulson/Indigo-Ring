@@ -47,8 +47,9 @@ class Plugin(indigo.PluginBase):
 				event = v
 				break
 
-		if datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now:
-
+		try: isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
+		except: isNew = True
+		if isNew:
 			try: self.updateStateOnServer(dev, "name", doorbell.description)
 			except: self.de (dev, "name")
 			try: self.updateStateOnServer(dev, "lastEvent", event.kind)
