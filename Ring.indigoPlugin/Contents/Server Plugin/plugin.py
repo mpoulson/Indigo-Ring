@@ -108,8 +108,7 @@ class Plugin(indigo.PluginBase):
 						if not dev.enabled:
 							continue
 
-
-					self._refreshStatesFromHardware(dev)
+						self._refreshStatesFromHardware(dev)
 
 				self.sleep(3)
 		except self.StopThread:
