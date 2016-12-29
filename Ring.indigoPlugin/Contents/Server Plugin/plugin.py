@@ -48,13 +48,10 @@ class Plugin(indigo.PluginBase):
 				event = v
 				break
 
-		try: 
-			isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
-		except: 
-			isNew = True
-			exc_type, exc_value, exc_traceback = sys.exc_info()
-    		lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-    		Ring.logTrace(self.Ring, "_refreshStatesFromHardware - Exception", lines)
+		isNew = True
+
+		try: isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
+		except: self.debugLog("Failed to parse some datetimes!  You might need help from the developer!")
 
 		if isNew:
 			try: self.updateStateOnServer(dev, "name", doorbell.description)
@@ -84,7 +81,7 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"startup called")
 
 		self.updater = GitHubPluginUpdater(self)
-		self.updater.checkForUpdate()
+		#self.updater.checkForUpdate()
 		self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', 24)) * 60.0 * 60.0
 		self.debugLog(u"updateFrequency = " + str(self.updateFrequency))
 		self.next_update_check = time.time()
