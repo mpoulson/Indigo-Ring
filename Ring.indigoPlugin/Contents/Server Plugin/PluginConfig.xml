@@ -17,6 +17,14 @@
         <Label>The plugin will not check for updates if the frequency is set to zero.</Label>
     </Field>
 	<Field id="simpleSeparator4" type="separator"/>
+	<Field type="checkbox" id="sendTelemetry"
+		tooltip="Enables sending Telemetry to plugin developer." defaultValue="true">
+		<Label>Enable Telemetry:</Label>
+	</Field>
+	<Field id="telemetryNote" type="label" fontSize="small" fontColor="darkgray">
+        <Label>Telemetry will help the plugin developer catch errors and help improve it.</Label>
+    </Field>
+	<Field id="simpleSeparator5" type="separator"/>
 	<Field type="checkbox" id="showDebugInLog"
 		tooltip="This enables lots of debugging messages in the Indigo Event Log.">
 		<Label>Enable debugging:</Label>

@@ -5,6 +5,7 @@
 import indigo
 import os
 import sys
+import traceback
 import random
 import re
 import time
@@ -47,8 +48,14 @@ class Plugin(indigo.PluginBase):
 				event = v
 				break
 
-		try: isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
-		except: isNew = True
+		try: 
+			isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
+		except: 
+			isNew = True
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+    		lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+    		Ring.logTrace(self.Ring, "_refreshStatesFromHardware - Exception", lines)
+
 		if isNew:
 			try: self.updateStateOnServer(dev, "name", doorbell.description)
 			except: self.de (dev, "name")
