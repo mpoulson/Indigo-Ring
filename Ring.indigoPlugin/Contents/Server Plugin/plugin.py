@@ -66,6 +66,13 @@ class Plugin(indigo.PluginBase):
 			except: self.de (dev, "firmware")
 			try: self.updateStateOnServer(dev, "model", doorbell.kind)
 			except: self.de (dev, "model")
+			
+			if (event.kind == "motion"):
+				try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
+				except: self.de (dev, "lastMotionTime")
+			else:
+				try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
+				except: self.de (dev, "lastButtonPressTime")
 		
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:

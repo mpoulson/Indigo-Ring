@@ -35,6 +35,16 @@
 				<TriggerLabel>lastEvent</TriggerLabel>
 				<ControlPageLabel>lastEvent</ControlPageLabel>
 			</State>
+			<State id="lastMotionTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastMotionTime</TriggerLabel>
+				<ControlPageLabel>lastMotionTime</ControlPageLabel>
+			</State>
+			<State id="lastButtonPressTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastButtonPressTime</TriggerLabel>
+				<ControlPageLabel>lastButtonPressTime</ControlPageLabel>
+			</State>
 			<State id="lastEventTime">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastEventTime</TriggerLabel>
