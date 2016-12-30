@@ -48,10 +48,14 @@ class Plugin(indigo.PluginBase):
 				event = v
 				break
 
+		if (event == None):
+			self.errorLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
+			return
+
 		isNew = True
 
 		try: isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
-		except: self.debugLog("Failed to parse some datetimes!  You might need help from the developer!")
+		except: self.errorLog("Failed to parse some datetimes!  If this happens a lot you might need help from the developer!")
 
 		if isNew:
 			try: self.updateStateOnServer(dev, "name", doorbell.description)
@@ -207,8 +211,10 @@ class Plugin(indigo.PluginBase):
 		deviceListCopy = deepcopy(self.deviceList)
 		for existingDevice in indigo.devices.iter("self"):
 			for id in self.deviceList:
-				self.debugLog("\tcomparing %s against deviceList item %s" % (existingDevice.pluginProps["ringId"],id))
-				if existingDevice.pluginProps["ringId"] == id:
+				self.debugLog("States: %s" % existingDevice.address)
+				
+				self.debugLog("\tcomparing %s against deviceList item %s" % (existingDevice.address,id))
+				if str(existingDevice.address) == str(id):
 					self.debugLog("\tremoving item %s" % (id))
 					del deviceListCopy[id]
 					break
