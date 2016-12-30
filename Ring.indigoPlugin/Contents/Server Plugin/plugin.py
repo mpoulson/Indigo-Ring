@@ -36,7 +36,7 @@ class Plugin(indigo.PluginBase):
 
 		doorbellId = dev.pluginProps["doorbellId"]
 		#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
-
+		
 		doorbell = Ring.GetDevice(self.Ring,doorbellId)
 		lastEvents = Ring.GetDoorbellEvent(self.Ring)
 
@@ -64,9 +64,11 @@ class Plugin(indigo.PluginBase):
 			except: self.de (dev, "lastAnswered")
 			try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
 			except: self.de (dev, "firmware")
+			try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batteryLevel)
+			except: self.de (dev, "batteryLevel")
 			try: self.updateStateOnServer(dev, "model", doorbell.kind)
 			except: self.de (dev, "model")
-			
+
 			if (event.kind == "motion"):
 				try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
 				except: self.de (dev, "lastMotionTime")

@@ -65,6 +65,11 @@
 				<TriggerLabel>firmware</TriggerLabel>
 				<ControlPageLabel>firmware</ControlPageLabel>
 			</State>
+			<State id="batteryLevel">
+				<ValueType>String</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
 		</States>
 	</Device>
 </Devices>
