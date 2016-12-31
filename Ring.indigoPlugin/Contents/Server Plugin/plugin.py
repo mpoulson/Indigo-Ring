@@ -31,54 +31,64 @@ class Plugin(indigo.PluginBase):
 		self.Password = None
 		self.deviceList = {}
 		self.loginFailed = False
+		self.retryCount = 0
+		self.keepProcessing = True
 
 	def _refreshStatesFromHardware(self, dev):
+		try:
+			doorbellId = dev.pluginProps["doorbellId"]
+			#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
+			
+			doorbell = Ring.GetDevice(self.Ring,doorbellId)
+			lastEvents = Ring.GetDoorbellEvent(self.Ring)
 
-		doorbellId = dev.pluginProps["doorbellId"]
-		#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
-		
-		doorbell = Ring.GetDevice(self.Ring,doorbellId)
-		lastEvents = Ring.GetDoorbellEvent(self.Ring)
-
-		if len(lastEvents) == 0:
-			event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
-		else:
-			self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
-			for k,v in lastEvents.iteritems():
-				event = v
-				break
-
-		if (event == None):
-			self.errorLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
-			return
-
-		isNew = True
-
-		try: isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
-		except: self.errorLog("Failed to parse some datetimes!  If this happens a lot you might need help from the developer!")
-
-		if isNew:
-			try: self.updateStateOnServer(dev, "name", doorbell.description)
-			except: self.de (dev, "name")
-			try: self.updateStateOnServer(dev, "lastEvent", event.kind)
-			except: self.de (dev, "lastEvent")
-			try: self.updateStateOnServer(dev, "lastEventTime", str(event.now))
-			except: self.de (dev, "lastEventTime")
-			try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
-			except: self.de (dev, "lastAnswered")
-			try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
-			except: self.de (dev, "firmware")
-			try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batteryLevel)
-			except: self.de (dev, "batteryLevel")
-			try: self.updateStateOnServer(dev, "model", doorbell.kind)
-			except: self.de (dev, "model")
-
-			if (event.kind == "motion"):
-				try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
-				except: self.de (dev, "lastMotionTime")
+			if len(lastEvents) == 0:
+				event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
 			else:
-				try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
-				except: self.de (dev, "lastButtonPressTime")
+				self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
+				for k,v in lastEvents.iteritems():
+					event = v
+					break
+
+			if (event == None):
+				self.errorLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
+				return
+
+			isNew = True
+
+			if (dev.states["lastEventTime"] != ""):
+				try: 
+					isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
+				except: 
+					self.errorLog("Failed to parse some datetimes. If this happens a lot you might need help from the developer!")
+			
+			if isNew:
+				try: self.updateStateOnServer(dev, "name", doorbell.description)
+				except: self.de (dev, "name")
+				try: self.updateStateOnServer(dev, "lastEvent", event.kind)
+				except: self.de (dev, "lastEvent")
+				try: self.updateStateOnServer(dev, "lastEventTime", str(event.now))
+				except: self.de (dev, "lastEventTime")
+				try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
+				except: self.de (dev, "lastAnswered")
+				try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
+				except: self.de (dev, "firmware")
+				try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batteryLevel)
+				except: self.de (dev, "batteryLevel")
+				try: self.updateStateOnServer(dev, "model", doorbell.kind)
+				except: self.de (dev, "model")
+
+				if (event.kind == "motion"):
+					try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
+					except: self.de (dev, "lastMotionTime")
+				else:
+					try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
+					except: self.de (dev, "lastButtonPressTime")
+			self.retryCount = 0
+		except:
+			self.retryCount  = self.retryCount + 1
+			self.errorLog("Failed to get correct event data for deviceID:%s. Will keep retrying until max attempts (%s) reached" % (doorbellId, self.pluginPrefs.get("maxRetry", 5)))
+
 		
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
@@ -116,7 +126,7 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def runConcurrentThread(self):
 		try:
-			while True:
+			while self.keepProcessing:
 				if self.loginFailed == False:
 					if (self.updateFrequency > 0.0) and (time.time() > self.next_update_check):
 						self.next_update_check = time.time() + self.updateFrequency
@@ -125,6 +135,9 @@ class Plugin(indigo.PluginBase):
 					for dev in indigo.devices.iter("self"):
 						if not dev.enabled:
 							continue
+						if (int(self.pluginPrefs.get("maxRetry", 5)) != 0 and self.retryCount >= int(self.pluginPrefs.get("maxRetry", 5))):
+							self.errorLog("Reached max retry attempts.  Won't Refresh from Server. !")
+							self.sleep(36000)
 
 						self._refreshStatesFromHardware(dev)
 
@@ -140,6 +153,12 @@ class Plugin(indigo.PluginBase):
 	def validatePrefsConfigUi(self, valuesDict):
 		self.debugLog(u"Vaidating Plugin Configuration")
 		errorsDict = indigo.Dict()
+		if valuesDict[u"maxRetry"] == "":
+			errorsDict[u"maxRetry"] = u"Please enter retry value."
+		else:
+			try: int(valuesDict[u"maxRetry"])
+			except:
+				errorsDict[u"maxRetry"] = u"Please enter a valid Retry Value."
 		if len(errorsDict) > 0:
 			self.errorLog(u"\t Validation Errors")
 			return (False, valuesDict, errorsDict)

@@ -9,6 +9,12 @@
 	<Field type="textfield" id="Password" secure="true" tooltip="Ring Password" visibleBindingValue="true">
 		<Label>Ring Password:</Label>
 	</Field>
+	<Field type="textfield" id="maxRetry" tooltip="Max Retries before Failure" defaultValue="5">
+		<Label>Max refresh retry attempts:</Label>
+	</Field>
+	<Field id="retryNote" type="label" fontSize="small" fontColor="darkgray">
+        <Label>The plugin will never stop retrying on error if the retry attempts is set to zero. </Label>
+    </Field>
 	 <Field id="sep1" type="separator"/>
     <Field id="updateFrequency" type="textfield" defaultValue="24">
         <Label>Check for plugin update frequency (hours):</Label>
@@ -16,7 +22,7 @@
     <Field id="updateNote" type="label" fontSize="small" fontColor="darkgray">
         <Label>The plugin will not check for updates if the frequency is set to zero.</Label>
     </Field>
-	<Field id="simpleSeparator4" type="separator"/>
+	<Field id="simpleSeparator6" type="separator"/>
 	<Field type="checkbox" id="sendTelemetry"
 		tooltip="Enables sending Telemetry to plugin developer." defaultValue="true">
 		<Label>Enable Telemetry:</Label>
