@@ -77,7 +77,8 @@ class Plugin(indigo.PluginBase):
 				except: self.de (dev, "batteryLevel")
 				try: self.updateStateOnServer(dev, "model", doorbell.kind)
 				except: self.de (dev, "model")
-
+				try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
+				except: self.de (dev, "recordingUrl")
 				if (event.kind == "motion"):
 					try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
 					except: self.de (dev, "lastMotionTime")

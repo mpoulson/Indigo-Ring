@@ -70,6 +70,11 @@
 				<TriggerLabel>batteryLevel</TriggerLabel>
 				<ControlPageLabel>batteryLevel</ControlPageLabel>
 			</State>
+			<State id="recordingUrl">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RecordingUrl</TriggerLabel>
+				<ControlPageLabel>RecordingUrl</ControlPageLabel>
+			</State>
 		</States>
 	</Device>
 </Devices>
