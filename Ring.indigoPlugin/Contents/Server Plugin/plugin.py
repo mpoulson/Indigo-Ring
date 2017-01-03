@@ -77,8 +77,9 @@ class Plugin(indigo.PluginBase):
 				except: self.de (dev, "batteryLevel")
 				try: self.updateStateOnServer(dev, "model", doorbell.kind)
 				except: self.de (dev, "model")
-				try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
-				except: self.de (dev, "recordingUrl")
+				if (event.recordingState == "ready"):
+					try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
+					except: self.de (dev, "recordingUrl")
 				if (event.kind == "motion"):
 					try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
 					except: self.de (dev, "lastMotionTime")
@@ -202,7 +203,7 @@ class Plugin(indigo.PluginBase):
 			self.login(True)
 			return True
 	def validateDeviceConfigUi(self, valuesDict, typeId, devId):
-		self.debugLog(u"validateDeviceConfigUi called with valuesDict: %s" % str(valuesDict))
+		#self.debugLog(u"validateDeviceConfigUi called with valuesDict: %s" % str(valuesDict))
 		
 		return (True, valuesDict)
 
@@ -262,7 +263,7 @@ class Plugin(indigo.PluginBase):
 			valuesDict["kind"] = selectedData.kind
 			valuesDict["firmware"] = selectedData.firmware_version
 		
-		self.debugLog("\tSelectionChanged valuesDict to be returned:\n%s" % (str(valuesDict)))
+		#self.debugLog(u"\tSelectionChanged valuesDict to be returned:\n%s" % (str(valuesDict)))
 		return valuesDict
 	##########################################
 	def checkForUpdates(self):
