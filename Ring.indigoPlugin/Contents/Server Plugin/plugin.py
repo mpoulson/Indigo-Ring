@@ -37,7 +37,7 @@ class Plugin(indigo.PluginBase):
 	def _refreshStatesFromHardware(self, dev):
 		try:
 			doorbellId = dev.pluginProps["doorbellId"]
-			#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
+			self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
 			
 			doorbell = Ring.GetDevice(self.Ring,doorbellId)
 			lastEvents = Ring.GetDoorbellEvent(self.Ring)
@@ -51,7 +51,7 @@ class Plugin(indigo.PluginBase):
 					break
 
 			if (event == None):
-				self.errorLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
+				#self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
 				return
 
 			isNew = True
@@ -77,6 +77,7 @@ class Plugin(indigo.PluginBase):
 				except: self.de (dev, "batteryLevel")
 				try: self.updateStateOnServer(dev, "model", doorbell.kind)
 				except: self.de (dev, "model")
+				
 				if (event.recordingState == "ready"):
 					try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
 					except: self.de (dev, "recordingUrl")
