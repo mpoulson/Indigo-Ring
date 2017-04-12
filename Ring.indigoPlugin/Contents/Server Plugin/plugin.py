@@ -37,7 +37,7 @@ class Plugin(indigo.PluginBase):
 	def _refreshStatesFromHardware(self, dev):
 		try:
 			doorbellId = dev.pluginProps["doorbellId"]
-			self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
+			#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
 			
 			doorbell = Ring.GetDevice(self.Ring,doorbellId)
 			lastEvents = Ring.GetDoorbellEvent(self.Ring)
