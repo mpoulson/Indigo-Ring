@@ -73,11 +73,14 @@ class Plugin(indigo.PluginBase):
 				except: self.de (dev, "lastAnswered")
 				try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
 				except: self.de (dev, "firmware")
-				try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batteryLevel)
-				except: self.de (dev, "batteryLevel")
+				# if (doorbell.batteryLevel != None and doorbell.batteryLevel != ""):
+				# 	try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batteryLevel)
+				# 	except: self.de (dev, "batteryLevel")
 				try: self.updateStateOnServer(dev, "model", doorbell.kind)
 				except: self.de (dev, "model")
-				
+				if (doorbell.state != None):
+					try: dev.updateStateOnServer("onOffState", doorbell.state)
+					except: self.de (dev, "onOffState")
 				if (event.recordingState == "ready"):
 					try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
 					except: self.de (dev, "recordingUrl")
@@ -275,3 +278,56 @@ class Plugin(indigo.PluginBase):
 
 	def forceUpdate(self):
 		self.updater.update(currentVersion='0.0.0')
+	########################################
+	# Relay / Dimmer Action callback
+	######################
+	def actionControlDevice(self, action, dev):
+		doorbellId = dev.pluginProps["doorbellId"]
+		indigo.server.log(u"Current state is \"%s\"" % (dev.onState), isError=True)
+		###### TURN ON ######
+		if action.deviceAction == indigo.kDeviceAction.TurnOn:
+			# Command hardware module (dev) to turn ON here:
+			sendSuccess = self.Ring.SetFloodLightOn(str(doorbellId))
+			#sendSuccess = True		# Set to False if it failed.
+
+			if sendSuccess:
+				# If success then log that the command was successfully sent.
+				indigo.server.log(u"sent \"%s\" %s" % (dev.name, "on"))
+
+				# And then tell the Indigo Server to update the state.
+				dev.updateStateOnServer("onOffState", True)
+			else:
+				# Else log failure but do NOT update state on Indigo Server.
+				indigo.server.log(u"send \"%s\" %s failed" % (dev.name, "on"), isError=True)
+
+		###### TURN OFF ######
+		elif action.deviceAction == indigo.kDeviceAction.TurnOff:
+			# Command hardware module (dev) to turn OFF here:
+			sendSuccess = self.Ring.SetFloodLightOff(str(doorbellId))
+
+			if sendSuccess:
+				# If success then log that the command was successfully sent.
+				indigo.server.log(u"sent \"%s\" %s" % (dev.name, "off"))
+
+				# And then tell the Indigo Server to update the state:
+				dev.updateStateOnServer("onOffState", False)
+			else:
+				# Else log failure but do NOT update state on Indigo Server.
+				indigo.server.log(u"send \"%s\" %s failed" % (dev.name, "off"), isError=True)
+
+		###### TOGGLE ######
+		elif action.deviceAction == indigo.kDeviceAction.Toggle:
+			# Command hardware module (dev) to toggle here:
+			indigo.server.log(u"Current state is \"%s\"" % (dev.onState), isError=True)
+			newOnState = not dev.onState
+			sendSuccess = True		# Set to False if it failed.
+
+			if sendSuccess:
+				# If success then log that the command was successfully sent.
+				indigo.server.log(u"sent \"%s\" %s" % (dev.name, "toggle"))
+
+				# And then tell the Indigo Server to update the state:
+				dev.updateStateOnServer("onOffState", newOnState)
+			else:
+				# Else log failure but do NOT update state on Indigo Server.
+				indigo.server.log(u"send \"%s\" %s failed" % (dev.name, "toggle"), isError=True)

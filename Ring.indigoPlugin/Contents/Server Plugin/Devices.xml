@@ -77,4 +77,71 @@
 			</State>
 		</States>
 	</Device>
+	<Device type="relay" id="RingFloodLight">
+		<Name>Ring FloodLight</Name>
+		<ConfigUI>
+			<Field id="address" type="textfield"  hidden="true" >
+				<Label/>
+			</Field>
+			<Field id="doorbell" type="menu">
+				<Label>Ring FloodLight:</Label>
+				<List class="self" filter="" method="doorbellList"/>
+				<CallbackMethod>selectionChanged</CallbackMethod>
+			</Field>
+			<Field type="textfield" id="doorbellId" readonly="true">
+				<Label>Device ID:</Label>
+			</Field>
+			<Field type="textfield" id="name" readonly="true">
+				<Label>System Name:</Label>
+			</Field>
+			<Field type="textfield" id="kind" readonly="true">
+				<Label>System Type:</Label>
+			</Field>
+			<Field type="textfield" id="firmware" readonly="true">
+				<Label>Firmware Version:</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="name">
+				<ValueType>String</ValueType>
+				<TriggerLabel>name</TriggerLabel>
+				<ControlPageLabel>name</ControlPageLabel>
+			</State>
+			<State id="lastEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastEvent</TriggerLabel>
+				<ControlPageLabel>lastEvent</ControlPageLabel>
+			</State>
+			<State id="lastMotionTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastMotionTime</TriggerLabel>
+				<ControlPageLabel>lastMotionTime</ControlPageLabel>
+			</State>
+			<State id="lastEventTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastEventTime</TriggerLabel>
+				<ControlPageLabel>lastEventTime</ControlPageLabel>
+			</State>
+			<State id="lastAnswered">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>lastAnswered</TriggerLabel>
+				<ControlPageLabel>lastAnswered</ControlPageLabel>
+			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>model</TriggerLabel>
+				<ControlPageLabel>model</ControlPageLabel>
+			</State>
+			<State id="firmware">
+				<ValueType>String</ValueType>
+				<TriggerLabel>firmware</TriggerLabel>
+				<ControlPageLabel>firmware</ControlPageLabel>
+			</State>
+			<State id="recordingUrl">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RecordingUrl</TriggerLabel>
+				<ControlPageLabel>RecordingUrl</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
 </Devices>
