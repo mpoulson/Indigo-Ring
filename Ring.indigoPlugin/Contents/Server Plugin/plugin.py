@@ -12,6 +12,7 @@ import time
 from datetime import datetime,tzinfo,timedelta
 
 from Ring import Ring
+
 from copy import deepcopy
 from ghpu import GitHubPluginUpdater
 # Need json support; Use "simplejson" for Indigo support
@@ -33,6 +34,7 @@ class Plugin(indigo.PluginBase):
 		self.loginFailed = False
 		self.retryCount = 0
 		self.keepProcessing = True
+		self.restartCount = 0
 
 	def _refreshStatesFromHardware(self, dev):
 		try:
@@ -40,6 +42,7 @@ class Plugin(indigo.PluginBase):
 			#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
 			
 			doorbell = Ring.GetDevice(self.Ring,doorbellId)
+
 			lastEvents = Ring.GetDoorbellEvent(self.Ring)
 
 			if len(lastEvents) == 0:
@@ -91,10 +94,10 @@ class Plugin(indigo.PluginBase):
 					try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
 					except: self.de (dev, "lastButtonPressTime")
 			self.retryCount = 0
+
 		except:
 			self.retryCount  = self.retryCount + 1
 			self.errorLog("Failed to get correct event data for deviceID:%s. Will keep retrying until max attempts (%s) reached" % (doorbellId, self.pluginPrefs.get("maxRetry", 5)))
-
 		
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
@@ -127,6 +130,7 @@ class Plugin(indigo.PluginBase):
 			self.buildAvailableDeviceList()
 
 	def shutdown(self):
+		self.keepProcessing = False
 		self.debugLog(u"shutdown called")
 
 	########################################
@@ -146,8 +150,15 @@ class Plugin(indigo.PluginBase):
 							self.sleep(36000)
 
 						self._refreshStatesFromHardware(dev)
+						self.restartCount = self.restartCount + 1
 
-				self.sleep(3)
+				if (self.restartCount > 10000):
+					self.restartCount = 0
+					indigo.server.log(u"Memory Leak Prevention. Restarting Plugin. - This will happen until I find and fix the leak")
+					serverPlugin = indigo.server.getPlugin(self.pluginId)
+					serverPlugin.restart(waitUntilDone=False)
+					break
+				self.sleep(5)
 		except self.StopThread:
 			pass	# Optionally catch the StopThread exception and do any needed cleanup.
 
