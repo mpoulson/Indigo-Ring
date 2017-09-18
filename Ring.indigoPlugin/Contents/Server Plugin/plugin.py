@@ -294,7 +294,7 @@ class Plugin(indigo.PluginBase):
 	######################
 	def actionControlDevice(self, action, dev):
 		doorbellId = dev.pluginProps["doorbellId"]
-		indigo.server.log(u"Current state is \"%s\"" % (dev.onState), isError=True)
+		indigo.server.log(u"Current state is \"%s\"" % (dev.onState), isError=False)
 		###### TURN ON ######
 		if action.deviceAction == indigo.kDeviceAction.TurnOn:
 			# Command hardware module (dev) to turn ON here:
