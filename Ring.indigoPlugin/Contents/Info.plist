@@ -21,5 +21,12 @@
 			<string>http://forums.indigodomo.com/viewforum.php?f=221</string>
 		</dict>
 	</array>
+	<key>GithubInfo</key>
+	<dict>
+		<key>GithubRepo</key>
+		<string>indigo-ring</string>
+		<key>GithubUser</key>
+		<string>mpoulson</string>
+	</dict>
 </dict>
 </plist>
