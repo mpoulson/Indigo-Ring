@@ -57,15 +57,21 @@ class Plugin(indigo.PluginBase):
 				#self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
 				return
 
-			isNew = True
+			isNewEvent = True
 
 			if (dev.states["lastEventTime"] != ""):
 				try: 
-					isNew = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
+					isNewEvent = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
 				except: 
 					self.errorLog("Failed to parse some datetimes. If this happens a lot you might need help from the developer!")
+
+				#Always update the battery level.  In the event we dont have motion but the battery level
+				
 			
-			if isNew:
+			try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batterylevel)
+			except: self.de (dev, "batteryLevel")
+		
+			if isNewEvent:
 				try: self.updateStateOnServer(dev, "name", doorbell.description)
 				except: self.de (dev, "name")
 				try: self.updateStateOnServer(dev, "lastEvent", event.kind)
@@ -76,9 +82,6 @@ class Plugin(indigo.PluginBase):
 				except: self.de (dev, "lastAnswered")
 				try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
 				except: self.de (dev, "firmware")
-				# if (doorbell.batteryLevel != None and doorbell.batteryLevel != ""):
-				# 	try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batteryLevel)
-				# 	except: self.de (dev, "batteryLevel")
 				try: self.updateStateOnServer(dev, "model", doorbell.kind)
 				except: self.de (dev, "model")
 				if (doorbell.state != None):
