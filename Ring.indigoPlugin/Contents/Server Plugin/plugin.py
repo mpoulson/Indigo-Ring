@@ -40,7 +40,6 @@ class Plugin(indigo.PluginBase):
 		try:
 			doorbellId = dev.pluginProps["doorbellId"]
 			#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
-			
 			doorbell = Ring.GetDevice(self.Ring,doorbellId)
 
 			lastEvents = Ring.GetDoorbellEvent(self.Ring)
@@ -97,11 +96,13 @@ class Plugin(indigo.PluginBase):
 					try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
 					except: self.de (dev, "lastButtonPressTime")
 			self.retryCount = 0
-
-		except:
+		except Exception as err:
 			self.retryCount  = self.retryCount + 1
+			Ring.logTrace(self.Ring, "Update Error",  {'Error': str(err)})
+
 			self.errorLog("Failed to get correct event data for deviceID:%s. Will keep retrying until max attempts (%s) reached" % (doorbellId, self.pluginPrefs.get("maxRetry", 5)))
-		
+			self.errorLog("Error: %s" % err)
+
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
 			self.debugLog(u"Updating Device: %s, State: %s, Value: %s" % (dev.name, state, value))
@@ -150,6 +151,7 @@ class Plugin(indigo.PluginBase):
 							continue
 						if (int(self.pluginPrefs.get("maxRetry", 5)) != 0 and self.retryCount >= int(self.pluginPrefs.get("maxRetry", 5))):
 							self.errorLog("Reached max retry attempts.  Won't Refresh from Server. !")
+							self.errorLog("You may need to contact Mike for support.  Please post a message at http://forums.indigodomo.com/viewforum.php?f=235")
 							self.sleep(36000)
 
 						self._refreshStatesFromHardware(dev)
