@@ -12,6 +12,8 @@ Requirements:
 Supported Devices:
   - Ring Doorbell
   - Ring Doorbell Pro
+  - Ring flood light
+  - Ring Sickup Cam
 
 How to use:
   - Install the plugin from (https://github.com/mpoulson/Indigo-Ring/archive/0.1.23.zip)
