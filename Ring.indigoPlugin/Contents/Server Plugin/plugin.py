@@ -66,9 +66,9 @@ class Plugin(indigo.PluginBase):
 
 				#Always update the battery level.  In the event we dont have motion but the battery level
 				
-			
-			try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batterylevel)
-			except: self.de (dev, "batteryLevel")
+			if hasattr(doorbell, 'batterylevel'):
+				try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batterylevel)
+				except: self.de (dev, "batteryLevel")
 		
 			if isNewEvent:
 				try: self.updateStateOnServer(dev, "name", doorbell.description)
@@ -109,7 +109,7 @@ class Plugin(indigo.PluginBase):
 			dev.updateStateOnServer(state, value)
 
 	def de (self, dev, value):
-		self.errorLog ("[%s] No value found for device: %s, field: %s" % (time.asctime(), dev.name, value))
+		self.debugLog("[%s] No value found for device: %s, field: %s" % (time.asctime(), dev.name, value))
 
 	########################################
 	def startup(self):
