@@ -109,7 +109,8 @@ class Plugin(indigo.PluginBase):
 			dev.updateStateOnServer(state, value)
 
 	def de (self, dev, value):
-		self.debugLog("[%s] No value found for device: %s, field: %s" % (time.asctime(), dev.name, value))
+		x = 1
+		#self.debugLog("[%s] No value found for device: %s, field: %s" % (time.asctime(), dev.name, value))
 
 	########################################
 	def startup(self):
@@ -285,7 +286,7 @@ class Plugin(indigo.PluginBase):
 		
 		#self.debugLog(u"\tSelectionChanged valuesDict to be returned:\n%s" % (str(valuesDict)))
 		return valuesDict
-	##########################################
+
 	def checkForUpdates(self):
 		self.updater.checkForUpdate()
 
@@ -294,9 +295,7 @@ class Plugin(indigo.PluginBase):
 
 	def forceUpdate(self):
 		self.updater.update(currentVersion='0.0.0')
-	########################################
-	# Relay / Dimmer Action callback
-	######################
+
 	def actionControlDevice(self, action, dev):
 		doorbellId = dev.pluginProps["doorbellId"]
 		indigo.server.log(u"Current state is \"%s\"" % (dev.onState), isError=False)
@@ -347,3 +346,65 @@ class Plugin(indigo.PluginBase):
 			else:
 				# Else log failure but do NOT update state on Indigo Server.
 				indigo.server.log(u"send \"%s\" %s failed" % (dev.name, "toggle"), isError=True)
+	
+	def _setLightsOn(self, pluginAction):
+		self.debugLog(u"\t Set %s - Ligths On" % pluginAction.pluginTypeId)
+		dev = indigo.devices[pluginAction.deviceId]
+		doorbellId = dev.pluginProps["doorbellId"]
+
+		sendSuccess = self.Ring.SetFloodLightOn(str(doorbellId))
+
+		if sendSuccess:
+			# If success then log that the command was successfully sent.
+			indigo.server.log(u"sent \"%s\" %s" % (dev.name, "on"))
+
+			# And then tell the Indigo Server to update the state:
+			dev.updateStateOnServer("onOffState", True)
+		else:
+			# Else log failure but do NOT update state on Indigo Server.
+			indigo.server.log(u"send \"%s\" %s failed" % (dev.name, "on"), isError=True)
+
+	def _setLightsOff(self, pluginAction):
+		self.debugLog(u"\t Set %s - Ligths Off" % pluginAction.pluginTypeId)
+		dev = indigo.devices[pluginAction.deviceId]
+		doorbellId = dev.pluginProps["doorbellId"]
+
+		sendSuccess = self.Ring.SetFloodLightOff(str(doorbellId))
+
+		if sendSuccess:
+			# If success then log that the command was successfully sent.
+			indigo.server.log(u"sent \"%s\" %s" % (dev.name, "off"))
+
+			# And then tell the Indigo Server to update the state:
+			dev.updateStateOnServer("onOffState", False)
+		else:
+			# Else log failure but do NOT update state on Indigo Server.
+			indigo.server.log(u"send \"%s\" %s failed" % (dev.name, "off"), isError=True)
+	
+	def _setSirenOn(self, pluginAction):
+		self.debugLog(u"\t Set %s - Siren On" % pluginAction.pluginTypeId)
+		dev = indigo.devices[pluginAction.deviceId]
+		doorbellId = dev.pluginProps["doorbellId"]
+
+		sendSuccess = self.Ring.SetSirenOn(str(doorbellId))
+
+		if sendSuccess:
+			# If success then log that the command was successfully sent.
+			indigo.server.log(u"sent Siren \"%s\" %s" % (dev.name, "on"))
+		else:
+			# Else log failure but do NOT update state on Indigo Server.
+			indigo.server.log(u"send Siren \"%s\" %s failed" % (dev.name, "on"), isError=True)
+
+	def _setSirenOff(self, pluginAction):
+		self.debugLog(u"\t Set %s - Siren Off" % pluginAction.pluginTypeId)
+		dev = indigo.devices[pluginAction.deviceId]
+		doorbellId = dev.pluginProps["doorbellId"]
+
+		sendSuccess = self.Ring.SetSirenOff(str(doorbellId))
+
+		if sendSuccess:
+			# If success then log that the command was successfully sent.
+			indigo.server.log(u"sent Siren \"%s\" %s" % (dev.name, "off"))
+		else:
+			# Else log failure but do NOT update state on Indigo Server.
+			indigo.server.log(u"send Siren \"%s\" %s failed" % (dev.name, "off"), isError=True)

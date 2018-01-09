@@ -1,3 +1,19 @@
 <?xml version="1.0"?>
 <Actions>
+    <Action id="setLightsOn" deviceFilter="self">
+		<Name>Turn Lights On</Name>
+		<CallbackMethod>_setLightsOn</CallbackMethod>
+	</Action>
+    <Action id="setLightsOff" deviceFilter="self">
+		<Name>Turn Lights Off</Name>
+		<CallbackMethod>_setLightsOff</CallbackMethod>
+	</Action>
+    <Action id="setSirenOn" deviceFilter="self">
+		<Name>Turn Siren On</Name>
+		<CallbackMethod>_setSirenOn</CallbackMethod>
+	</Action>
+    <Action id="setSirenOff" deviceFilter="self">
+		<Name>Turn Siren Off</Name>
+		<CallbackMethod>_setSirenOff</CallbackMethod>
+	</Action>
 </Actions>
