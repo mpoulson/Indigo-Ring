@@ -14,7 +14,7 @@ Supported Devices:
   - Ring Doorbell Pro
 
 How to use:
-  - Install the plugin from (https://github.com/mpoulson/Indigo-Ring/archive/0.1.15.zip)
+  - Install the plugin from (https://github.com/mpoulson/Indigo-Ring/archive/0.1.23.zip)
   - Configure username/password
   - Add a new device for each Doorbell
 
