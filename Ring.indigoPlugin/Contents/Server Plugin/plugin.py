@@ -98,10 +98,11 @@ class Plugin(indigo.PluginBase):
 			self.retryCount = 0
 		except Exception as err:
 			self.retryCount  = self.retryCount + 1
-			Ring.logTrace(self.Ring, "Update Error",  {'Error': str(err)})
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			Ring.logTrace(self.Ring, "Update Error",  {'Error': str(err), 'Line': str(exc_tb.tb_lineno) })
 
 			self.errorLog("Failed to get correct event data for deviceID:%s. Will keep retrying until max attempts (%s) reached" % (doorbellId, self.pluginPrefs.get("maxRetry", 5)))
-			self.errorLog("Error: %s" % err)
+			self.errorLog("Error: %s, Line:%s" % (err, str(exc_tb.tb_lineno)))
 
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
