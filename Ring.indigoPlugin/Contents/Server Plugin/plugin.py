@@ -41,6 +41,8 @@ class Plugin(indigo.PluginBase):
 			doorbellId = dev.pluginProps["doorbellId"]
 			#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
 			doorbell = Ring.GetDevice(self.Ring,doorbellId)
+			if doorbell is None:
+				return
 
 			lastEvents = Ring.GetDoorbellEvent(self.Ring)
 
@@ -64,7 +66,7 @@ class Plugin(indigo.PluginBase):
 				except: 
 					self.errorLog("Failed to parse some datetimes. If this happens a lot you might need help from the developer!")
 
-				#Always update the battery level.  In the event we dont have motion but the battery level
+			#Always update the battery level.  In the event we dont have motion but the battery level
 				
 			if hasattr(doorbell, 'batterylevel'):
 				try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batterylevel)
