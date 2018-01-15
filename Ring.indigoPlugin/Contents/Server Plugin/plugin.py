@@ -85,7 +85,7 @@ class Plugin(indigo.PluginBase):
 				except: self.de (dev, "firmware")
 				try: self.updateStateOnServer(dev, "model", doorbell.kind)
 				except: self.de (dev, "model")
-				if (doorbell.state != None):
+				if (doorbell.state is not None):
 					try: dev.updateStateOnServer("onOffState", doorbell.state)
 					except: self.de (dev, "onOffState")
 				if (event.recordingState == "ready"):
