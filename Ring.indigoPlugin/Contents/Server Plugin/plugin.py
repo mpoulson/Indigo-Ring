@@ -46,6 +46,7 @@ class Plugin(indigo.PluginBase):
 
 			lastEvents = Ring.GetDoorbellEvent(self.Ring)
 
+			# Temporary fix to Issue #3 [ZOB]
 			event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
 			#if len(lastEvents) == 0:
 			#	event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
