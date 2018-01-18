@@ -9,6 +9,7 @@ import traceback
 import random
 import re
 import time
+import requests # Remove this once meat of _downloadVideo moved to Ring.py
 from datetime import datetime,tzinfo,timedelta
 
 from Ring import Ring
@@ -49,10 +50,12 @@ class Plugin(indigo.PluginBase):
 			if len(lastEvents) == 0:
 				event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
 			else:
-				self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
+				self.debugLog("Recent Event(s) found!  Count: %s" % len(lastEvents))
 				for k,v in lastEvents.iteritems():
-					event = v
-					break
+					self.debugLog(v)
+					if v.id == doorbellId:
+						event = v
+						break
 
 			if (event == None):
 				#self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
@@ -75,6 +78,8 @@ class Plugin(indigo.PluginBase):
 			if isNewEvent:
 				try: self.updateStateOnServer(dev, "name", doorbell.description)
 				except: self.de (dev, "name")
+				try: self.updateStateOnServer(dev, "lastEventId", str(event.id))
+				except: self.de (dev, "lastEventId")
 				try: self.updateStateOnServer(dev, "lastEvent", event.kind)
 				except: self.de (dev, "lastEvent")
 				try: self.updateStateOnServer(dev, "lastEventTime", str(event.now))
@@ -88,9 +93,13 @@ class Plugin(indigo.PluginBase):
 				if (doorbell.state is not None):
 					try: dev.updateStateOnServer("onOffState", doorbell.state)
 					except: self.de (dev, "onOffState")
-				if (event.recordingState == "ready"):
-					try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
-					except: self.de (dev, "recordingUrl")
+# Race condition - given we will likely poll and process the event soon after it
+# occurred, good chance the recording won't be ready yet; that, and the requested
+# recordingUrl expires after one hour, so better to just request it only at the
+# time it is needed, i.e. in _downloadVideo			
+#				if (event.recordingState == "ready"):
+#					try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
+#					except: self.de (dev, "recordingUrl")
 				if (event.kind == "motion"):
 					try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
 					except: self.de (dev, "lastMotionTime")
@@ -411,3 +420,33 @@ class Plugin(indigo.PluginBase):
 		else:
 			# Else log failure but do NOT update state on Indigo Server.
 			indigo.server.log(u"send Siren \"%s\" %s failed" % (dev.name, "off"), isError=True)
+			
+	def _downloadVideo(self, pluginAction):
+		self.debugLog(u"\t Download video - %s" % pluginAction.pluginTypeId)
+		dev = indigo.devices[pluginAction.deviceId]
+		doorbellId = dev.pluginProps["doorbellId"]
+		
+		filename = self.pluginPrefs["DownloadFilePath"]
+		
+		# Meat of below should live in Ring.py, not here in plugin.py
+		# Would also be good to check that user has subscription before download attempt
+		try:
+			if filename:
+				# Copied headers from Ring.py temporarily until this code is moved in there
+				theHeaders = {'content-type': 'application/json', 'User-Agent': 'ring/3.6.4 (iPhone; iOS 10.2; Scale/2.00)'}
+				url = self.Ring.GetRecordingUrl(dev.states["lastEventId"])
+				response = requests.get(url, headers=theHeaders, verify=False)
+				if response and response.status_code == 200:
+					with open(filename, 'wb') as recording:
+						recording.write(response.content)
+						indigo.server.log(u"Downloaded video of last event for \"%s\"" % (dev.name))
+						return
+				elif response:
+					indigo.server.log(u"Failed to download for \"%s\", response status code was %s" % (dev.name, response.status_code), isError=True)
+				else:
+					indigo.server.log(u"Failed to download for \"%s\", no response for url %s" % (dev.name, url), isError=True)						
+			else:
+				indigo.server.log(u"Missing filename setting in Plugins->Ring Doorbell->Configure... for video download of last event for \"%s\"" % (dev.name), isError=True)
+				return
+		except IOError as error:
+			indigo.server.log(u"%s" % (error), isError=True)
