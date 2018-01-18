@@ -431,22 +431,22 @@ class Plugin(indigo.PluginBase):
 		# Meat of below should live in Ring.py, not here in plugin.py
 		# Would also be good to check that user has subscription before download attempt
 		try:
-			# Copied headers from Ring.py temporarily until this code is moved in there
-			theHeaders = {'content-type': 'application/json', 'User-Agent': 'ring/3.6.4 (iPhone; iOS 10.2; Scale/2.00)'}
-			url = self.Ring.GetRecordingUrl(dev.states["lastEventId"])
-			response = requests.get(url, headers=theHeaders, verify=False)
-			if response and response.status_code == 200:
-				if filename:
+			if filename:
+				# Copied headers from Ring.py temporarily until this code is moved in there
+				theHeaders = {'content-type': 'application/json', 'User-Agent': 'ring/3.6.4 (iPhone; iOS 10.2; Scale/2.00)'}
+				url = self.Ring.GetRecordingUrl(dev.states["lastEventId"])
+				response = requests.get(url, headers=theHeaders, verify=False)
+				if response and response.status_code == 200:
 					with open(filename, 'wb') as recording:
 						recording.write(response.content)
 						indigo.server.log(u"Downloaded video of last event for \"%s\"" % (dev.name))
 						return
+				elif response:
+					indigo.server.log(u"Failed to download for \"%s\", response status code was %s" % (dev.name, response.status_code), isError=True)
 				else:
-					indigo.server.log(u"Missing filename for video download of last event for \"%s\"" % (dev.name), isError=True)
-					return
-			elif response:
-				indigo.server.log(u"Failed to download for \"%s\", response status code was %s" % (dev.name, response.status_code), isError=True)
+					indigo.server.log(u"Failed to download for \"%s\", no response for url %s" % (dev.name, url), isError=True)						
 			else:
-				indigo.server.log(u"Failed to download for \"%s\", no response for url %s" % (dev.name, url), isError=True)
+				indigo.server.log(u"Missing filename setting in Plugins->Ring Doorbell->Configure... for video download of last event for \"%s\"" % (dev.name), isError=True)
+				return
 		except IOError as error:
 			indigo.server.log(u"%s" % (error), isError=True)
