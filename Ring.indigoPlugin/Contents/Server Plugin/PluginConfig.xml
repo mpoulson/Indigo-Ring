@@ -9,9 +9,6 @@
 	<Field type="textfield" id="Password" secure="true" tooltip="Ring Password" visibleBindingValue="true">
 		<Label>Ring Password:</Label>
 	</Field>
-	<Field type="textfield" id="DownloadFilePath" tooltip="Path and filename to download video ro" visibleBindingValue="true">
-		<Label>Path and filename for downloading video with Download Video action:</Label>
-	</Field>
 	<Field type="textfield" id="maxRetry" tooltip="Max Retries before Failure" defaultValue="5">
 		<Label>Max refresh retry attempts:</Label>
 	</Field>
