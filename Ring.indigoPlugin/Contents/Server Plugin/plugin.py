@@ -46,15 +46,13 @@ class Plugin(indigo.PluginBase):
 
 			lastEvents = Ring.GetDoorbellEvent(self.Ring)
 
-			# Temporary fix to Issue #3 [ZOB]
-			event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
-			#if len(lastEvents) == 0:
-			#	event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
-			#else:
-			#	self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
-			#	for k,v in lastEvents.iteritems():
-			#		event = v
-			#		break
+			if len(lastEvents) == 0:
+				event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
+			else:
+				self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
+				for k,v in lastEvents.iteritems():
+					event = v
+					break
 
 			if (event == None):
 				#self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
