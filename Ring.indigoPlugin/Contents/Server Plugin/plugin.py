@@ -426,7 +426,7 @@ class Plugin(indigo.PluginBase):
 		dev = indigo.devices[pluginAction.deviceId]
 		doorbellId = dev.pluginProps["doorbellId"]
 		
-		filename = '/Users/zodiac/Documents/IndigoLastRingVideo/ringVideo.mp4'
+		filename = self.pluginPrefs["DownloadFilePath"]
 		
 		# Meat of below should live in Ring.py, not here in plugin.py
 		# Would also be good to check that user has subscription before download attempt
