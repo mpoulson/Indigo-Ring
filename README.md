@@ -27,5 +27,5 @@ What it does:
 
 Sample Use:
 - Create a trigger that fires when a Ring device's lastMotionTime Has Any Change
-- Fire an action to Download Video for that device's last event after waiting a few minutes by specifying a Delay in Indigo
-- Use another Indigo plugin such as Better Email to send the video as an email attachment to you (note: for this to work, you must also include a Delay on this action to allow time for the file download to complete)
+- Fire an action to Download Video for that device's last event after waiting a few minutes by specifying a delay in the configuration of the action in Indigo
+- Use another Indigo plugin such as Better Email to send the video as an email attachment to you (note: for this to work, you must also include a delay on this action to allow time for the file download to complete)
