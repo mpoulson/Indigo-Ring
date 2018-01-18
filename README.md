@@ -23,4 +23,4 @@ How to use:
 What it does:
   - Updates Devices States on Motion or Ring Events 
   - Has separate states for last Motion and Ring event date/time
-  - Allows you to download for the last event on a device (Requires Ring Cloud subscription)
+  - Allows you to download video for the last event on a device (Requires Ring Cloud subscription; NOTE: you must include a short delay of a few minutes after the event triggers in order for the video to become available from Ring before running the Download Video action)
