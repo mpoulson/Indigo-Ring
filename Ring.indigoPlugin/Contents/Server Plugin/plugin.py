@@ -51,8 +51,10 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
 				for k,v in lastEvents.iteritems():
-					event = v
-					break
+					self.debugLog(v)
+					if v.id == doorbellId:
+						event = v
+						break
 
 			if (event == None):
 				#self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
