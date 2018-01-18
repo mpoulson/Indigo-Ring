@@ -16,4 +16,8 @@
 		<Name>Turn Siren Off</Name>
 		<CallbackMethod>_setSirenOff</CallbackMethod>
 	</Action>
+    <Action id="downloadVideo" deviceFilter="self">
+		<Name>Download Video for Last Event</Name>
+		<CallbackMethod>_downloadVideo</CallbackMethod>
+	</Action>	
 </Actions>
