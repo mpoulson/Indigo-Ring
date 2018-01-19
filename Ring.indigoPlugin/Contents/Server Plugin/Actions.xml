@@ -17,7 +17,22 @@
 		<CallbackMethod>_setSirenOff</CallbackMethod>
 	</Action>
     <Action id="downloadVideo" deviceFilter="self">
-		<Name>Download Video for Last Event</Name>
+		<Name>Download Video for Specified Event</Name>
 		<CallbackMethod>_downloadVideo</CallbackMethod>
+		<ConfigUI>
+			<Field id="eventIdOption" type="menu" defaultValue="lastEventId"
+				tooltip="Optionally manually specify the Event ID to download video for on this device.">
+				<Label>Event to download video for:</Label>
+				<List>
+					<Option value="lastEventId">Last Event for Device</Option>
+					<Option value="specifyEventId">Specify Event ID Manually</Option>
+				</List>
+			</Field>
+			<Field id="userSpecifiedEventId" type="textfield" visibleBindingId="eventIdOption" visibleBindingValue="specifyEventId"
+				tooltip="Enter the event id to download video for on this deivce">
+				<Label>Event ID (e.g. 5513546390316394328):</Label>
+				<Description>Event ID to download video for on this device</Description>
+			</Field>
+		</ConfigUI>
 	</Action>	
 </Actions>
