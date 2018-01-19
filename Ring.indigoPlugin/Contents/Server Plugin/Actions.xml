@@ -20,8 +20,10 @@
 		<Name>Download Video for Specified Event</Name>
 		<CallbackMethod>_downloadVideo</CallbackMethod>
 		<ConfigUI>
-			<Field id="eventIdOption" type="menu" defaultValue="lastEventId"
-				tooltip="Optionally manually specify the Event ID to download video for on this device.">
+			<Field type="textfield" id="downloadFilePath" defaultValue="" tooltip="Path and filename to download video to" visibleBindingValue="true">
+				<Label>Path and filename to download video to (e.g. /Users/yourName/Downloads/ringVideo.mp4):</Label>
+			</Field>
+			<Field id="eventIdOption" type="menu" defaultValue="lastEventId" tooltip="Optionally manually specify the Event ID to download video for on this device.">
 				<Label>Event to download video for:</Label>
 				<List>
 					<Option value="lastEventId">Last Event for Device</Option>
