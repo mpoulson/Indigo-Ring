@@ -434,7 +434,16 @@ class Plugin(indigo.PluginBase):
 			if filename:
 				# Copied headers from Ring.py temporarily until this code is moved in there
 				theHeaders = {'content-type': 'application/json', 'User-Agent': 'ring/3.6.4 (iPhone; iOS 10.2; Scale/2.00)'}
-				url = self.Ring.GetRecordingUrl(dev.states["lastEventId"])
+
+				eventId = dev.states["lastEventId"]
+				eventIdOption = pluginAction.props.get('eventIdOption', "lastEventId")
+				if eventIdOption == "specifyEventId":
+					eventId = pluginAction.props.get('userSpecifiedEventId', "")
+				if eventId == "":
+					indigo.server.log(u"No Event ID specified to download for \"%s\"" % (dev.name), isError=True)
+					return
+					
+				url = self.Ring.GetRecordingUrl(eventId)
 				response = requests.get(url, headers=theHeaders, verify=False)
 				if response and response.status_code == 200:
 					with open(filename, 'wb') as recording:
