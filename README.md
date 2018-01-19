@@ -18,12 +18,12 @@ Supported Devices:
 How to use:
 - Install the plugin from (https://github.com/mpoulson/Indigo-Ring/archive/0.1.23.zip)
 - Configure username/password
-- Add a new device for each Doorbell
+- Add a new device for each Doorbell or other Ring device
 
 What it does:
-- Updates Devices States on Motion or Ring Events 
+- Updates Device States on Motion or Ring Events 
 - Has separate states for last Motion and Ring event date/time
-- Allows you to download video for the last event on a device (Requires Ring Cloud subscription; NOTE: you must include a short delay of a few minutes after the event triggers in order for the video to become available from Ring before running the Download Video action)
+- Allows you to download video for an event on a device (Requires Ring Cloud subscription; NOTE: you must include a short delay of a few minutes after the event triggers in order for the video to become available from Ring before running the Download Video action)
 
 Sample Use:
 - Create a trigger that fires when a Ring device's lastMotionTime Has Any Change
