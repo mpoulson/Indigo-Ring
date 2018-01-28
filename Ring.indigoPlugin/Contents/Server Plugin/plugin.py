@@ -45,39 +45,52 @@ class Plugin(indigo.PluginBase):
 			if doorbell is None:
 				return
 
-			lastEvents = Ring.GetDoorbellEvent(self.Ring)
+			#Always update the battery level.  In the event we dont have motion but the battery level
+				
+			if hasattr(doorbell, 'batterylevel'):
+				try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batterylevel)
+				except: self.de (dev, "batteryLevel")
 
-			if len(lastEvents) == 0:
-				event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
-			else:
-				self.debugLog("Recent Event(s) found!  Count: %s" % len(lastEvents))
-				for k,v in lastEvents.iteritems():
-					self.debugLog(v)
-					if v.id == doorbellId:
-						event = v
-						break
+			try: self.updateStateOnServer(dev, "name", doorbell.description)
+			except: self.de (dev, "name")
+			try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
+			except: self.de (dev, "firmware")
+			try: self.updateStateOnServer(dev, "model", doorbell.kind)
+			except: self.de (dev, "model")
+			if (doorbell.state is not None):
+				try: dev.updateStateOnServer("onOffState", doorbell.state)
+				except: self.de (dev, "onOffState")
+			
+			#Process Events for specific device
+			events = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
+			if (events != None):
+				#self.debugLog("Device Event(s) found!  Event Id: %s" % str(events.id))
+				self.processDeviceEvents (dev, events)
+			self.retryCount = 0
+		except Exception as err:
+			self.retryCount  = self.retryCount + 1
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			Ring.logTrace(self.Ring, "Update Error",  {'Error': str(err), 'Line': str(exc_tb.tb_lineno) })
 
-			if (event == None):
-				#self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
-				return
+			self.errorLog("Failed to get correct event data for deviceID:%s. Will keep retrying until max attempts (%s) reached" % (doorbellId, self.pluginPrefs.get("maxRetry", 5)))
+			self.errorLog("Error: %s, Line:%s" % (err, str(exc_tb.tb_lineno)))
 
-			isNewEvent = True
+	#Update the device properties in Indigo, Called from global events and per device events
+	def processDeviceEvents(self, dev, event):
+		if (event == None):
+			self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
+			return
 
+		isNewEvent = True
+		try:
 			if (dev.states["lastEventTime"] != ""):
 				try: 
 					isNewEvent = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
 				except: 
 					self.errorLog("Failed to parse some datetimes. If this happens a lot you might need help from the developer!")
 
-			#Always update the battery level.  In the event we dont have motion but the battery level
-				
-			if hasattr(doorbell, 'batterylevel'):
-				try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batterylevel)
-				except: self.de (dev, "batteryLevel")
-		
 			if isNewEvent:
-				try: self.updateStateOnServer(dev, "name", doorbell.description)
-				except: self.de (dev, "name")
+				self.debugLog("processing event for %s" % dev.pluginProps["doorbellId"])
 				try: self.updateStateOnServer(dev, "lastEventId", str(event.id))
 				except: self.de (dev, "lastEventId")
 				try: self.updateStateOnServer(dev, "lastEvent", event.kind)
@@ -86,33 +99,16 @@ class Plugin(indigo.PluginBase):
 				except: self.de (dev, "lastEventTime")
 				try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
 				except: self.de (dev, "lastAnswered")
-				try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
-				except: self.de (dev, "firmware")
-				try: self.updateStateOnServer(dev, "model", doorbell.kind)
-				except: self.de (dev, "model")
-				if (doorbell.state is not None):
-					try: dev.updateStateOnServer("onOffState", doorbell.state)
-					except: self.de (dev, "onOffState")
-# Race condition - given we will likely poll and process the event soon after it
-# occurred, good chance the recording won't be ready yet; that, and the requested
-# recordingUrl expires after one hour, so better to just request it only at the
-# time it is needed, i.e. in _downloadVideo			
-#				if (event.recordingState == "ready"):
-#					try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
-#					except: self.de (dev, "recordingUrl")
+		
 				if (event.kind == "motion"):
 					try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
 					except: self.de (dev, "lastMotionTime")
 				else:
 					try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
 					except: self.de (dev, "lastButtonPressTime")
-			self.retryCount = 0
 		except Exception as err:
-			self.retryCount  = self.retryCount + 1
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			Ring.logTrace(self.Ring, "Update Error",  {'Error': str(err), 'Line': str(exc_tb.tb_lineno) })
-
-			self.errorLog("Failed to get correct event data for deviceID:%s. Will keep retrying until max attempts (%s) reached" % (doorbellId, self.pluginPrefs.get("maxRetry", 5)))
 			self.errorLog("Error: %s, Line:%s" % (err, str(exc_tb.tb_lineno)))
 
 	def updateStateOnServer(self, dev, state, value):
@@ -159,13 +155,30 @@ class Plugin(indigo.PluginBase):
 						self.next_update_check = time.time() + self.updateFrequency
 						self.updater.checkForUpdate()
 
+					#We need to get global events that are not device specific
+					lastEvents = Ring.GetDoorbellEvent(self.Ring)
+
+					#Get Device specific Events
 					for dev in indigo.devices.iter("self"):
 						if not dev.enabled:
+							#Skip disabled devices
 							continue
+						
+						#Get the doorbell id for the current device
+						doorbellId = dev.pluginProps["doorbellId"]
+
 						if (int(self.pluginPrefs.get("maxRetry", 5)) != 0 and self.retryCount >= int(self.pluginPrefs.get("maxRetry", 5))):
 							self.errorLog("Reached max retry attempts.  Won't Refresh from Server. !")
 							self.errorLog("You may need to contact Mike for support.  Please post a message at http://forums.indigodomo.com/viewforum.php?f=235")
 							self.sleep(36000)
+
+						#Check to see if we have any global events for this device
+						if len(lastEvents) != 0:
+							for k,v in lastEvents.iteritems():
+								if (str(v.doorbot_id) == str(doorbellId)):
+									event = v
+									self.processDeviceEvents(dev, event)
+									break
 
 						self._refreshStatesFromHardware(dev)
 						self.restartCount = self.restartCount + 1
