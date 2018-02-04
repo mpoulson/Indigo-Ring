@@ -10,9 +10,7 @@ import random
 import re
 import time
 from datetime import datetime,tzinfo,timedelta
-
 from Ring import Ring
-
 from copy import deepcopy
 from ghpu import GitHubPluginUpdater
 # Need json support; Use "simplejson" for Indigo support
@@ -44,59 +42,27 @@ class Plugin(indigo.PluginBase):
 			if doorbell is None:
 				return
 
-			lastEvents = Ring.GetDoorbellEvent(self.Ring)
-
-			if len(lastEvents) == 0:
-				event = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
-			else:
-				self.debugLog("Recient Event(s) found!  Count: %s" % len(lastEvents))
-				for k,v in lastEvents.iteritems():
-					event = v
-					break
-
-			if (event == None):
-				#self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
-				return
-
-			isNewEvent = True
-
-			if (dev.states["lastEventTime"] != ""):
-				try: 
-					isNewEvent = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
-				except: 
-					self.errorLog("Failed to parse some datetimes. If this happens a lot you might need help from the developer!")
-
 			#Always update the battery level.  In the event we dont have motion but the battery level
 				
 			if hasattr(doorbell, 'batterylevel'):
 				try: self.updateStateOnServer(dev, "batteryLevel", doorbell.batterylevel)
 				except: self.de (dev, "batteryLevel")
-		
-			if isNewEvent:
-				try: self.updateStateOnServer(dev, "name", doorbell.description)
-				except: self.de (dev, "name")
-				try: self.updateStateOnServer(dev, "lastEvent", event.kind)
-				except: self.de (dev, "lastEvent")
-				try: self.updateStateOnServer(dev, "lastEventTime", str(event.now))
-				except: self.de (dev, "lastEventTime")
-				try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
-				except: self.de (dev, "lastAnswered")
-				try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
-				except: self.de (dev, "firmware")
-				try: self.updateStateOnServer(dev, "model", doorbell.kind)
-				except: self.de (dev, "model")
-				if (doorbell.state is not None):
-					try: dev.updateStateOnServer("onOffState", doorbell.state)
-					except: self.de (dev, "onOffState")
-				if (event.recordingState == "ready"):
-					try: self.updateStateOnServer(dev, "recordingUrl", self.Ring.GetRecordingUrl(event.id))
-					except: self.de (dev, "recordingUrl")
-				if (event.kind == "motion"):
-					try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
-					except: self.de (dev, "lastMotionTime")
-				else:
-					try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
-					except: self.de (dev, "lastButtonPressTime")
+
+			try: self.updateStateOnServer(dev, "name", doorbell.description)
+			except: self.de (dev, "name")
+			try: self.updateStateOnServer(dev, "firmware", doorbell.firmware_version)
+			except: self.de (dev, "firmware")
+			try: self.updateStateOnServer(dev, "model", doorbell.kind)
+			except: self.de (dev, "model")
+			if (doorbell.state is not None):
+				try: dev.updateStateOnServer("onOffState", doorbell.state)
+				except: self.de (dev, "onOffState")
+			
+			#Process Events for specific device
+			events = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
+			if (events != None):
+				#self.debugLog("Device Event(s) found!  Event Id: %s" % str(events.id))
+				self.processDeviceEvents (dev, events)
 			self.retryCount = 0
 		except Exception as err:
 			self.retryCount  = self.retryCount + 1
@@ -104,6 +70,42 @@ class Plugin(indigo.PluginBase):
 			Ring.logTrace(self.Ring, "Update Error",  {'Error': str(err), 'Line': str(exc_tb.tb_lineno) })
 
 			self.errorLog("Failed to get correct event data for deviceID:%s. Will keep retrying until max attempts (%s) reached" % (doorbellId, self.pluginPrefs.get("maxRetry", 5)))
+			self.errorLog("Error: %s, Line:%s" % (err, str(exc_tb.tb_lineno)))
+
+	#Update the device properties in Indigo, Called from global events and per device events
+	def processDeviceEvents(self, dev, event):
+		if (event == None):
+			self.debugLog("Failed to get correct event data for deviceID:%s.  Will keep retrying for now.  " % doorbellId)
+			return
+
+		isNewEvent = True
+		try:
+			if (dev.states["lastEventTime"] != ""):
+				try: 
+					isNewEvent = datetime.strptime(dev.states["lastEventTime"],'%Y-%m-%d %H:%M:%S') < event.now
+				except: 
+					self.errorLog("Failed to parse some datetimes. If this happens a lot you might need help from the developer!")
+
+			if isNewEvent:
+				self.debugLog("processing event for %s" % dev.pluginProps["doorbellId"])
+				try: self.updateStateOnServer(dev, "lastEventId", str(event.id))
+				except: self.de (dev, "lastEventId")
+				try: self.updateStateOnServer(dev, "lastEvent", event.kind)
+				except: self.de (dev, "lastEvent")
+				try: self.updateStateOnServer(dev, "lastEventTime", str(event.now))
+				except: self.de (dev, "lastEventTime")
+				try: self.updateStateOnServer(dev, "lastAnswered", event.answered)
+				except: self.de (dev, "lastAnswered")
+		
+				if (event.kind == "motion"):
+					try: self.updateStateOnServer(dev, "lastMotionTime", str(event.now))
+					except: self.de (dev, "lastMotionTime")
+				else:
+					try: self.updateStateOnServer(dev, "lastButtonPressTime", str(event.now))
+					except: self.de (dev, "lastButtonPressTime")
+		except Exception as err:
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			Ring.logTrace(self.Ring, "Update Error",  {'Error': str(err), 'Line': str(exc_tb.tb_lineno) })
 			self.errorLog("Error: %s, Line:%s" % (err, str(exc_tb.tb_lineno)))
 
 	def updateStateOnServer(self, dev, state, value):
@@ -150,13 +152,30 @@ class Plugin(indigo.PluginBase):
 						self.next_update_check = time.time() + self.updateFrequency
 						self.updater.checkForUpdate()
 
+					#We need to get global events that are not device specific
+					lastEvents = Ring.GetDoorbellEvent(self.Ring)
+
+					#Get Device specific Events
 					for dev in indigo.devices.iter("self"):
 						if not dev.enabled:
+							#Skip disabled devices
 							continue
+						
+						#Get the doorbell id for the current device
+						doorbellId = dev.pluginProps["doorbellId"]
+
 						if (int(self.pluginPrefs.get("maxRetry", 5)) != 0 and self.retryCount >= int(self.pluginPrefs.get("maxRetry", 5))):
 							self.errorLog("Reached max retry attempts.  Won't Refresh from Server. !")
 							self.errorLog("You may need to contact Mike for support.  Please post a message at http://forums.indigodomo.com/viewforum.php?f=235")
 							self.sleep(36000)
+
+						#Check to see if we have any global events for this device
+						if len(lastEvents) != 0:
+							for k,v in lastEvents.iteritems():
+								if (str(v.doorbot_id) == str(doorbellId)):
+									event = v
+									self.processDeviceEvents(dev, event)
+									break
 
 						self._refreshStatesFromHardware(dev)
 						self.restartCount = self.restartCount + 1
@@ -167,7 +186,7 @@ class Plugin(indigo.PluginBase):
 					serverPlugin = indigo.server.getPlugin(self.pluginId)
 					serverPlugin.restart(waitUntilDone=False)
 					break
-				self.sleep(5)
+				time.sleep(5)
 		except self.StopThread:
 			pass	# Optionally catch the StopThread exception and do any needed cleanup.
 
@@ -411,3 +430,22 @@ class Plugin(indigo.PluginBase):
 		else:
 			# Else log failure but do NOT update state on Indigo Server.
 			indigo.server.log(u"send Siren \"%s\" %s failed" % (dev.name, "off"), isError=True)
+
+	def _downloadVideo(self, pluginAction):
+		self.debugLog(u"\t Download video - %s" % pluginAction.pluginTypeId)
+		dev = indigo.devices[pluginAction.deviceId]
+		doorbellId = dev.pluginProps["doorbellId"]
+
+		filename = pluginAction.props.get('downloadFilePath', "")
+		eventId = dev.states["lastEventId"]
+		eventIdOption = pluginAction.props.get('eventIdOption', "lastEventId")
+		if eventIdOption == "specifyEventId":
+			eventId = pluginAction.props.get('userSpecifiedEventId', "")
+		
+		#Make sure we have an event ID to process
+		if eventId == "":
+			indigo.server.log(u"No Event ID specified to download for %s" % (dev.name), isError=True)
+			return
+		
+		#Perform the work
+		self.Ring.downloadVideo(dev, filename, eventId)
