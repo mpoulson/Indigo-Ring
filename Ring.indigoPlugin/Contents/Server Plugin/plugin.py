@@ -12,7 +12,7 @@ import time
 from datetime import datetime,tzinfo,timedelta
 from Ring import Ring
 from copy import deepcopy
-from ghpu import GitHubPluginUpdater
+import versionCheck.versionCheck as VS
 # Need json support; Use "simplejson" for Indigo support
 try:
 	import simplejson as json
@@ -121,9 +121,6 @@ class Plugin(indigo.PluginBase):
 	def startup(self):
 		self.debug = self.pluginPrefs.get('showDebugInLog', False)
 		self.debugLog(u"startup called")
-
-		self.updater = GitHubPluginUpdater(self)
-		#self.updater.checkForUpdate()
 		self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', 24)) * 60.0 * 60.0
 		self.debugLog(u"updateFrequency = " + str(self.updateFrequency))
 		self.next_update_check = time.time()
@@ -140,8 +137,12 @@ class Plugin(indigo.PluginBase):
 			self.buildAvailableDeviceList()
 
 	def shutdown(self):
-		self.keepProcessing = False
 		self.debugLog(u"shutdown called")
+		self.keepProcessing = False
+
+	def stopConcurrentThread(self):
+		self.debugLog(u"stopConcurrentThread called")
+		self.keepProcessing = False
 
 	########################################
 	def runConcurrentThread(self):
@@ -150,7 +151,7 @@ class Plugin(indigo.PluginBase):
 				if self.loginFailed == False:
 					if (self.updateFrequency > 0.0) and (time.time() > self.next_update_check):
 						self.next_update_check = time.time() + self.updateFrequency
-						self.updater.checkForUpdate()
+						self.version_check()
 
 					#We need to get global events that are not device specific
 					lastEvents = Ring.GetDoorbellEvent(self.Ring)
@@ -188,7 +189,7 @@ class Plugin(indigo.PluginBase):
 					break
 				time.sleep(5)
 		except self.StopThread:
-			pass	# Optionally catch the StopThread exception and do any needed cleanup.
+			self.debugLog("shutdown requested")
 
 	########################################
 	def validateDeviceConfigUi(self, valuesDict, typeId, devId):
@@ -310,13 +311,13 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 	def checkForUpdates(self):
-		self.updater.checkForUpdate()
-
+		self.version_check()
+            
 	def updatePlugin(self):
-		self.updater.update()
+		self.version_check()
 
-	def forceUpdate(self):
-		self.updater.update(currentVersion='0.0.0')
+	#def forceUpdate(self):
+		#self.updater.update(currentVersion='0.0.0')
 
 	def actionControlDevice(self, action, dev):
 		doorbellId = dev.pluginProps["doorbellId"]
@@ -449,3 +450,7 @@ class Plugin(indigo.PluginBase):
 		
 		#Perform the work
 		self.Ring.downloadVideo(dev, filename, eventId)
+	
+	def version_check(self):
+		VS.versionCheck(self.pluginId,self.pluginVersion,indigo,printToLog="log")
+			
