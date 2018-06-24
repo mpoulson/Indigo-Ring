@@ -40,6 +40,7 @@ class Plugin(indigo.PluginBase):
 			#self.debugLog(u"Getting data for Doorbell : %s" % doorbellId)
 			doorbell = Ring.GetDevice(self.Ring,doorbellId)
 			if doorbell is None:
+				self.errorLog("Failed to get devices from Ring.com")
 				return
 
 			#Always update the battery level.  In the event we dont have motion but the battery level
@@ -60,6 +61,7 @@ class Plugin(indigo.PluginBase):
 			
 			#Process Events for specific device
 			events = Ring.GetDoorbellEventsforId(self.Ring,doorbellId)
+
 			if (events != None):
 				#self.debugLog("Device Event(s) found!  Event Id: %s" % str(events.id))
 				self.processDeviceEvents (dev, events)
@@ -155,6 +157,14 @@ class Plugin(indigo.PluginBase):
 
 					#We need to get global events that are not device specific
 					lastEvents = Ring.GetDoorbellEvent(self.Ring)
+					if (lastEvents == False):
+						self.errorLog("Error getting events. ")
+						self.retryCount  = self.retryCount + 1
+					
+					if (int(self.pluginPrefs.get("maxRetry", 5)) != 0 and self.retryCount >= int(self.pluginPrefs.get("maxRetry", 5))):
+						self.errorLog("Reached max retry attempts.  Won't Refresh from Server. !")
+						self.errorLog("You may need to contact Mike for support.  Please post a message at http://forums.indigodomo.com/viewforum.php?f=235")
+						self.sleep(36000)
 
 					#Get Device specific Events
 					for dev in indigo.devices.iter("self"):
