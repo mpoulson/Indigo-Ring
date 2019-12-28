@@ -200,6 +200,7 @@ class Plugin(indigo.PluginBase):
 				time.sleep(5)
 		except self.StopThread:
 			self.debugLog("shutdown requested")
+			pass
 
 	########################################
 	def validateDeviceConfigUi(self, valuesDict, typeId, devId):
@@ -247,7 +248,7 @@ class Plugin(indigo.PluginBase):
 			try:
 				if (self.UserID != self.pluginPrefs["UserID"]) or \
 					(self.Password != self.pluginPrefs["Password"]):
-					indigo.server.log("[%s] Replacting Username/Password." % time.asctime())
+					indigo.server.log("[%s] Setting Username/Password." % time.asctime())
 					self.UserID = self.pluginPrefs["UserID"]
 					self.Password = self.pluginPrefs["Password"]
 			except:
